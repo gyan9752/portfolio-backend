@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
-import { connectDB } from './config/db.js';
+import { connectDB, isDBConnected } from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import visitorRoutes from './routes/visitor.routes.js';
@@ -47,7 +47,13 @@ app.use(async (req, res, next) => {
 });
 
 // Health check
-app.get('/api/health', (req, res) => res.json({ ok: true, timestamp: new Date().toISOString() }));
+app.get('/api/health', (req, res) =>
+  res.json({
+    ok: true,
+    dbConnected: isDBConnected(),
+    timestamp: new Date().toISOString(),
+  })
+);
 
 // Public endpoints
 app.use('/api/auth', authRoutes);

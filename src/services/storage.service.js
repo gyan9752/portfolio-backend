@@ -1,12 +1,19 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { isDBConnected } from '../config/db.js';
 import { Contact } from '../models/Contact.js';
 import { Visitor } from '../models/Visitor.js';
 import { Booking } from '../models/Booking.js';
 
-const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../data');
+// In serverless environments (e.g. Vercel), /var/task is read-only.
+// We use os.tmpdir() for writable fallback storage.
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const dir = isServerless
+  ? path.join(os.tmpdir(), 'portfolio-data')
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../data');
+
 const messagesFile = path.join(dir, 'messages.json');
 const visitorsFile = path.join(dir, 'visitors.json');
 const bookingsFile = path.join(dir, 'bookings.json');
@@ -20,8 +27,12 @@ async function readJSON(filePath) {
 }
 
 async function writeJSON(filePath, data) {
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  try {
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.warn(`[Storage] Local fallback write skipped (${path.basename(filePath)}): ${err.message}`);
+  }
 }
 
 /* ==================== CONTACT MESSAGES ==================== */
