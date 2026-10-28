@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
-import { connectDB, isDBConnected } from './config/db.js';
+import { connectDB, isDBConnected, getDBError, getMaskedMongoUri } from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import visitorRoutes from './routes/visitor.routes.js';
@@ -51,6 +51,9 @@ app.get('/api/health', (req, res) =>
   res.json({
     ok: true,
     dbConnected: isDBConnected(),
+    dbError: getDBError(),
+    mongoUri: getMaskedMongoUri(),
+    smtpConfigured: Boolean(env.smtp.user && env.smtp.pass),
     timestamp: new Date().toISOString(),
   })
 );
