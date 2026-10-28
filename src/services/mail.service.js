@@ -22,6 +22,9 @@ function getTransporter() {
               user: env.smtp.user,
               pass: env.smtp.pass.replace(/\s+/g, ''), // Strip spaces from Gmail App Password
             },
+            connectionTimeout: 4000,
+            greetingTimeout: 4000,
+            socketTimeout: 5000,
           }
         : {
             host: env.smtp.host,
@@ -31,6 +34,9 @@ function getTransporter() {
               user: env.smtp.user,
               pass: env.smtp.pass,
             },
+            connectionTimeout: 4000,
+            greetingTimeout: 4000,
+            socketTimeout: 5000,
           }
     );
   }

@@ -20,10 +20,15 @@ export async function createVisitor(req, res, next) {
       welcomeEmailSent: true,
     });
 
-    // 2. Dispatch the automated welcome / thank you email asynchronously
-    sendWelcomeMail({ name: trimmedName, email: trimmedEmail }).catch((err) => {
-      console.error('[Welcome Email Trigger Failed]:', err.message);
-    });
+    // 2. Dispatch the automated welcome / thank you email
+    try {
+      await Promise.race([
+        sendWelcomeMail({ name: trimmedName, email: trimmedEmail }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Welcome mail timeout')), 3500)),
+      ]);
+    } catch (err) {
+      console.warn('[Welcome Email Warning]:', err.message);
+    }
 
     res.status(201).json({ ok: true, message: 'Visitor recorded successfully', visitor });
   } catch (err) {

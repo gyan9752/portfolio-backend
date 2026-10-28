@@ -1,27 +1,37 @@
 import mongoose from 'mongoose';
 import { env } from './env.js';
 
-let isMongoConnected = false;
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 export async function connectDB() {
-  if (mongoose.connection.readyState >= 1) {
-    isMongoConnected = true;
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return true;
   }
-  try {
-    const conn = await mongoose.connect(env.mongodbUri, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    isMongoConnected = true;
-    console.log(`[Database] MongoDB Atlas Connected: ${conn.connection.host}`);
-    return true;
-  } catch (err) {
-    isMongoConnected = false;
-    console.warn(`[Database] MongoDB not reachable (${err.message}). Falling back to local JSON storage.`);
-    return false;
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(env.mongodbUri, {
+        serverSelectionTimeoutMS: 2500,
+        bufferCommands: false,
+      })
+      .then((m) => {
+        console.log(`[Database] MongoDB Atlas Connected: ${m.connection.host}`);
+        return m;
+      })
+      .catch((err) => {
+        cached.promise = null;
+        console.warn(`[Database] MongoDB not reachable (${err.message}). Falling back to local storage.`);
+        return null;
+      });
   }
+
+  cached.conn = await cached.promise;
+  return isDBConnected();
 }
 
 export function isDBConnected() {
-  return isMongoConnected && mongoose.connection.readyState === 1;
+  return mongoose.connection.readyState === 1;
 }
