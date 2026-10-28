@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { isDBConnected } from '../config/db.js';
+import { isDBConnected, connectDB } from '../config/db.js';
 import { Contact } from '../models/Contact.js';
 import { Visitor } from '../models/Visitor.js';
 import { Booking } from '../models/Booking.js';
@@ -39,6 +39,7 @@ async function writeJSON(filePath, data) {
 export async function saveMessage(message) {
   let savedId = Date.now().toString();
 
+  await connectDB();
   if (isDBConnected()) {
     try {
       const doc = await Contact.create(message);
@@ -63,6 +64,7 @@ export async function saveMessage(message) {
 }
 
 export async function getMessages() {
+  await connectDB();
   if (isDBConnected()) {
     try {
       const docs = await Contact.find().sort({ createdAt: -1 });
@@ -83,6 +85,7 @@ export async function getMessages() {
 }
 
 export async function addMessageReply(messageId, { subject, message }) {
+  await connectDB();
   if (isDBConnected()) {
     try {
       await Contact.findByIdAndUpdate(messageId, {
@@ -109,6 +112,7 @@ export async function addMessageReply(messageId, { subject, message }) {
 export async function saveVisitor(visitor) {
   let savedId = Date.now().toString();
 
+  await connectDB();
   if (isDBConnected()) {
     try {
       const doc = await Visitor.create(visitor);
@@ -130,6 +134,7 @@ export async function saveVisitor(visitor) {
 }
 
 export async function getVisitors() {
+  await connectDB();
   if (isDBConnected()) {
     try {
       const docs = await Visitor.find().sort({ createdAt: -1 });
@@ -152,6 +157,7 @@ export async function getVisitors() {
 export async function saveBooking(booking) {
   let savedId = Date.now().toString();
 
+  await connectDB();
   if (isDBConnected()) {
     try {
       const doc = await Booking.create(booking);
@@ -174,6 +180,7 @@ export async function saveBooking(booking) {
 }
 
 export async function getBookings() {
+  await connectDB();
   if (isDBConnected()) {
     try {
       const docs = await Booking.find().sort({ createdAt: -1 });
@@ -196,6 +203,7 @@ export async function getBookings() {
 
 /* ==================== AGGREGATED STATS ==================== */
 export async function getStats() {
+  await connectDB();
   const [visitors, messages, bookings] = await Promise.all([
     getVisitors(),
     getMessages(),
