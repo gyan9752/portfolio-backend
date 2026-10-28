@@ -4,6 +4,10 @@ import { env } from './env.js';
 let isMongoConnected = false;
 
 export async function connectDB() {
+  if (mongoose.connection.readyState >= 1) {
+    isMongoConnected = true;
+    return true;
+  }
   try {
     const conn = await mongoose.connect(env.mongodbUri, {
       serverSelectionTimeoutMS: 5000,
